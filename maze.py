@@ -77,33 +77,6 @@ class Maze:
                 return self.vwalls[y][x1]
         raise WrongCoords()
 
-    def printMaze(self, prfn=sys.stdout.write):
-        y = -1
-        prfn("+")
-        for x in range(self.w):
-            if self.getWall((x, y), (x, y + 1)) == 1:
-                prfn("--")
-            else:
-                prfn("  ")
-            prfn("+")
-        prfn("\n")
-        for y in range(self.h):
-            prfn("|")
-            for x in range(self.w):
-                if self.getWall((x, y), (x + 1, y)) == 1:
-                    prfn("  |")
-                else:
-                    prfn("   ")
-            prfn("\n" + "+")
-            if y <= self.h - 1:
-                for x in range(self.w):
-                    if self.getWall((x, y), (x, y + 1)) == 1:
-                        prfn("--")
-                    else:
-                        prfn("  ")
-                    prfn("+")
-                prfn("\n")
-
     def genRandomMazeWalls(self):
         self.hwalls = [map(lambda _: random.choice((0, 1)), [0] * (self.w - 1))
                        for _ in range(self.h)]
@@ -135,8 +108,107 @@ class Maze:
                             visited.append((npx, npy))
                             break
 
+    def pathDF(self, start, end):
+        # Queue contains the paths we're considering.
+        queue = [[start]]
+        while len(queue) > 0:
+        # Take most recently added element from the queue.
+            path = queue.pop()
+
+            pos = path[-1]
+
+            for n in self.neighbors(*pos):
+                if n in path:
+                    continue
+                if n == end:
+                    return path + [end]
+                if not self.getWall(pos, n):
+                    queue.append(path + [n])
+            print "\r%s %r" % (len(path), path[-1]),
+        return None
+
+    def pathBF(self, start, end):
+        # Queue contains the paths we're considering.
+        queue = [[start]]
+        while len(queue) > 0:
+            # Take oldest element from the queue.
+            path = queue.pop()
+
+            pos = path[-1]
+
+            for n in self.neighbors(*pos):
+                if n in path:
+                    continue
+                if n == end:
+                    return path + [end]
+                if not self.getWall(pos, n):
+                    queue.append(path + [n])
+            print "\r%s %r" % (len(path), path[-1]),
+        return None
+
+    def printMaze(self, prfn=sys.stdout.write):
+        y = -1
+        prfn("+")
+        for x in range(self.w):
+            if self.getWall((x, y), (x, y + 1)) == 1:
+                prfn("--")
+            else:
+                prfn("  ")
+            prfn("+")
+        prfn("\n")
+        for y in range(self.h):
+            prfn("|")
+            for x in range(self.w):
+                if self.getWall((x, y), (x + 1, y)) == 1:
+                    prfn("  |")
+                else:
+                    prfn("   ")
+            prfn("\n" + "+")
+            if y <= self.h - 1:
+                for x in range(self.w):
+                    if self.getWall((x, y), (x, y + 1)) == 1:
+                        prfn("--")
+                    else:
+                        prfn("  ")
+                    prfn("+")
+                prfn("\n")
+
+    def printMazePath(self, start, end, prfn=sys.stdout.write):
+        path = self.pathBF(start, end)
+
+        y = -1
+        prfn("+")
+        for x in range(self.w):
+            if self.getWall((x, y), (x, y + 1)) == 1:
+                prfn("--")
+            else:
+                prfn("  ")
+            prfn("+")
+        prfn("\n")
+        for y in range(self.h):
+            prfn("|")
+            for x in range(self.w):
+                spc = '  '
+                if (x, y) in path:
+                    spc = '**'
+                if self.getWall((x, y), (x + 1, y)) == 1:
+                    prfn(spc + "|")
+                else:
+                    prfn(spc + " ")
+            prfn("\n" + "+")
+            if y <= self.h - 1:
+                for x in range(self.w):
+                    if self.getWall((x, y), (x, y + 1)) == 1:
+                        prfn("--")
+                    else:
+                        prfn("  ")
+                    prfn("+")
+                prfn("\n")
+
+
 if __name__ == "__main__":
-    maze = Maze()
+    maze = Maze(w=20, h=20)
     # maze.genRandomMazeWalls()
-    maze.genMaze(0, 0)
-    maze.printMaze()
+    # maze.printMaze()
+    maze.genMaze(random.choice(range(20)), random.choice(range(20)))
+    maze.printMazePath((0, 0), (19, 19))
